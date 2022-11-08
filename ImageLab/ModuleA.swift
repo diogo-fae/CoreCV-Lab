@@ -5,7 +5,6 @@
 //  Created by Diogo Rodrigues on 11/3/22.
 //  Copyright © 2022 Eric Larson. All rights reserved.
 //
-
 import UIKit
 
 class ModuleA: UIViewController {
@@ -16,7 +15,9 @@ class ModuleA: UIViewController {
     var detector:CIDetector! = nil
     let bridge = OpenCVBridge()
     var flashLight = -1
-
+    @IBOutlet weak var smiling: NSString!
+    @IBOutlet weak var blinking: NSString!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -54,6 +55,9 @@ class ModuleA: UIViewController {
         if f.count == 0 { return inputImage }
         
         var retImage = inputImage
+        
+        smiling = hasASmile(faces: f) ? "True" : "False"
+        blinking = isBlinking(faces:f) ? "True" : "False"
         
         //-------------------Example 1----------------------------------
         // if you just want to process on separate queue use this code
@@ -93,10 +97,28 @@ class ModuleA: UIViewController {
     
     func getFaces(img:CIImage) -> [CIFaceFeature]{
         // this ungodly mess makes sure the image is the correct orientation
-        let optsFace = [CIDetectorImageOrientation:self.videoManager.ciOrientation]
+        let optsFace = [CIDetectorImageOrientation:self.videoManager.ciOrientation,CIDetectorSmile:true] as [String : Any]
         // get Face Features
         return self.detector.features(in: img, options: optsFace) as! [CIFaceFeature]
         
+    }
+
+    func hasASmile(faces:[CIFaceFeature]) -> Bool {
+        for face in faces {
+            if(!face.hasSmile){
+                return false
+            }
+        }
+        return true
+    }
+    
+    func isBlinking(faces:[CIFaceFeature]) -> Bool {
+        for face in faces {
+            if(face.leftEyeClosed && face.rightEyeClosed){
+                return true
+            }
+        }
+        return false
     }
     
     
@@ -113,7 +135,6 @@ class ModuleA: UIViewController {
         }
         
 //        stageLabel.text = "Stage: \(self.bridge.processType)"
-
     }
     
     //MARK: Convenience Methods for UI Flash and Camera Toggle
@@ -141,7 +162,9 @@ class ModuleA: UIViewController {
             self.videoManager.turnOffFlash()
         }
     }
+    
+    
+    
 
    
 }
-
